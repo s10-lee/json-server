@@ -1,12 +1,16 @@
+import sys
 from socket import *
 from src.console import Console
 
 
-def run():
+def run(host='localhost', port=8888):
     server = socket(AF_INET, SOCK_STREAM)
     try:
-        server.bind(('localhost', 8888))
+        server.bind((host, int(port)))
         server.listen(5)
+
+        Console.write('\nGo to:', 'white')
+        Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
 
         while True:
             client, address = server.accept()
@@ -15,25 +19,33 @@ def run():
             pieces = rd.split('\r\n')
 
             if len(pieces):
-                print(pieces)
+                print('\n', pieces, '\n')
 
             output = "HTTP/1.1 200 OK\r\n"
-            output += "Content-Type: text/html; charset=utf-8\r\n"
-            output += "\r\n<html><body><h1>Hello, World</h1></body></html>\r\n\r\n"
+            output += "Content-Type: application/json; charset=utf-8\r\n"
+            output += '\r\n{"some": "one", "two": 22, "boolean": false}\r\n\r\n'
             client.sendall(output.encode())
             client.close()
             # client.shutdown(0)
 
     except KeyboardInterrupt:
-        print('\nShutting down...\n')
+        Console.write('\nShutting down...\n', 'white')
 
     except Exception as e:
-        print('\nError:')
-        print(e)
+        Console.write('\nError:', 'red', True)
+        Console.write(f' - {e}\n', 'red')
 
     finally:
         server.close()
 
 
-print('\nGo to http://localhost:8888\n')
-run()
+server_port = 8888
+if len(sys.argv) > 1:
+    for index, argument in enumerate(sys.argv):
+
+        # Find port number in arguments
+        if argument in ['-p', '--port'] and len(sys.argv) > index + 1:
+            server_port = sys.argv[index + 1]
+
+
+run(port=server_port)

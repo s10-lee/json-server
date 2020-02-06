@@ -16,7 +16,18 @@ class Console:
     }
 
     @classmethod
-    def write(cls, text, color=None, bold=False):
+    def __wrap(cls, text, color=None, bold=False):
         # color_code = cls.schema.get(color, '37')
         # prefix = int(bold)
-        print(f"\033[{int(bold)};{cls.schema.get(color, '37')}m{text}\033[0m")
+        return f"\033[{int(bold)};{cls.schema.get(color, '37')}m{text}\033[0m"
+
+    @classmethod
+    def write(cls, text, color=None, bold=False):
+        print(cls.__wrap(text, color, bold))
+
+
+#
+# write console error
+#
+def write_red(text):
+    Console.write(text, 'red')

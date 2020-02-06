@@ -9,7 +9,8 @@ def run(host='localhost', port=8888):
         server.bind((host, int(port)))
         server.listen(5)
 
-        Console.write('\nGo to:', 'white')
+        Console.write('\nWelcome to JSON Server !', 'green', True)
+        Console.write('Go to:')
         Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
 
         while True:
@@ -29,7 +30,7 @@ def run(host='localhost', port=8888):
             # client.shutdown(0)
 
     except KeyboardInterrupt:
-        Console.write('\nShutting down...\n', 'white')
+        Console.write('\nShutting down...\n', 'gray', True)
 
     except Exception as e:
         Console.write('\nError:', 'red', True)
@@ -39,6 +40,7 @@ def run(host='localhost', port=8888):
         server.close()
 
 
+server_host = 'localhost'
 server_port = 8888
 if len(sys.argv) > 1:
     for index, argument in enumerate(sys.argv):

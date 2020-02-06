@@ -1,5 +1,6 @@
 # Console class helper
 # write colors into console
+# - white doesnt work
 
 
 class Console:
@@ -16,18 +17,11 @@ class Console:
     }
 
     @classmethod
-    def __wrap(cls, text, color=None, bold=False):
+    def wrap_text(cls, text, color=None, bold=False):
         # color_code = cls.schema.get(color, '37')
         # prefix = int(bold)
         return f"\033[{int(bold)};{cls.schema.get(color, '37')}m{text}\033[0m"
 
     @classmethod
     def write(cls, text, color=None, bold=False):
-        print(cls.__wrap(text, color, bold))
-
-
-#
-# write console error
-#
-def write_red(text):
-    Console.write(text, 'red')
+        print(cls.wrap_text(text, color, bold))

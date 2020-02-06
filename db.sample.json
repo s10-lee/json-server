@@ -1,0 +1,24 @@
+{
+  "posts": [
+    {
+      "id": 1,
+      "title": "json-server",
+      "author": "s10"
+    },
+    {
+      "id": 2,
+      "title": "Local DEV server",
+      "author": "s10"
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "some comment",
+      "post_id": 1
+    }
+  ],
+  "profile": {
+    "name": "stan lee"
+  }
+}

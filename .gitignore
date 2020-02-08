@@ -1,3 +1,6 @@
+# Data file
+db.json
+
 # IDE and MAC OS
 .DS_Store
 .idea

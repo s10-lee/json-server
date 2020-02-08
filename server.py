@@ -49,5 +49,7 @@ if len(sys.argv) > 1:
         if argument in ['-p', '--port'] and len(sys.argv) > index + 1:
             server_port = sys.argv[index + 1]
 
+        if argument in ['-h', '--host'] and len(sys.argv) > index + 1:
+            server_host = sys.argv[index + 1]
 
-run(port=server_port)
+run(host=server_host, port=server_port)

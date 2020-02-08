@@ -1,4 +1,7 @@
+import os
 import sys
+import json
+
 from socket import *
 from src.console import Console
 
@@ -9,8 +12,12 @@ def run(host='localhost', port=8888):
         server.bind((host, int(port)))
         server.listen(5)
 
-        Console.write('\nWelcome to JSON Server !', 'green', True)
-        Console.write('Go to:')
+        # Open json data file
+        with open('db.json') as f:
+            db = json.load(f)
+            # print('**********\n', db, '\n')
+
+        Console.write('\nWelcome to JSON Server !\n', 'green', bold=True)
         Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
 
         while True:
@@ -24,17 +31,20 @@ def run(host='localhost', port=8888):
 
             output = "HTTP/1.1 200 OK\r\n"
             output += "Content-Type: application/json; charset=utf-8\r\n"
-            output += '\r\n{"some": "one", "two": 22, "boolean": false}\r\n\r\n'
+            output += f'\r\n{str(db)}\r\n\r\n'
             client.sendall(output.encode())
             client.close()
             # client.shutdown(0)
 
     except KeyboardInterrupt:
-        Console.write('\nShutting down...\n', 'gray', True)
+        Console.write('\nShutting down...\n', bold=True)
+
+    except FileNotFoundError:
+        Console.write('\n db.json not found !\n', 'red', bold=True)
 
     except Exception as e:
-        Console.write('\nError:', 'red', True)
-        Console.write(f' - {e}\n', 'red')
+        Console.write('\nError:', 'red')
+        Console.write(f' {e}\n', 'red', bold=True)
 
     finally:
         server.close()

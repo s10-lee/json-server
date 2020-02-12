@@ -1,6 +1,4 @@
-import os
 import sys
-import json
 
 from socket import *
 from src.console import Console
@@ -25,12 +23,19 @@ def run(host, port, db_path):
             rd = client.recv(5000).decode()
             pieces = rd.split('\r\n')
 
+            current_url = '/'
+            for p in pieces:
+                if p.startswith('GET'):
+                    current_url = p.split()[1].strip('/')
+
+            content = router.get_response(current_url)
+
             if len(pieces):
                 print('\n', pieces, '\n')
 
             output = "HTTP/1.1 200 OK\r\n"
             output += "Content-Type: application/json; charset=utf-8\r\n"
-            output += f'\r\n{content}\r\n\r\n'
+            output += f'\r\n{list(content)}\r\n\r\n'
             client.sendall(output.encode())
             client.close()
             # client.shutdown(0)

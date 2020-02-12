@@ -4,18 +4,17 @@ import json
 
 from socket import *
 from src.console import Console
+from src.router import Router
 
 
-def run(host='localhost', port=8888):
+def run(host, port, db_path):
     server = socket(AF_INET, SOCK_STREAM)
     try:
         server.bind((host, int(port)))
         server.listen(5)
 
-        # Open json data file
-        with open('db.json') as f:
-            db = json.load(f)
-            # print('**********\n', db, '\n')
+        router = Router(db_path)
+        content = '{"test": "String from server !"}'
 
         Console.write('\nWelcome to JSON Server !\n', 'green', bold=True)
         Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
@@ -31,16 +30,13 @@ def run(host='localhost', port=8888):
 
             output = "HTTP/1.1 200 OK\r\n"
             output += "Content-Type: application/json; charset=utf-8\r\n"
-            output += f'\r\n{str(db)}\r\n\r\n'
+            output += f'\r\n{content}\r\n\r\n'
             client.sendall(output.encode())
             client.close()
             # client.shutdown(0)
 
     except KeyboardInterrupt:
         Console.write('\nShutting down...\n', bold=True)
-
-    except FileNotFoundError:
-        Console.write('\n db.json not found !\n', 'red', bold=True)
 
     except Exception as e:
         Console.write('\nError:', 'red')
@@ -52,6 +48,8 @@ def run(host='localhost', port=8888):
 
 server_host = 'localhost'
 server_port = 8888
+server_db_path = 'db.json'
+
 if len(sys.argv) > 1:
     for index, argument in enumerate(sys.argv):
 
@@ -62,4 +60,7 @@ if len(sys.argv) > 1:
         if argument in ['-h', '--host'] and len(sys.argv) > index + 1:
             server_host = sys.argv[index + 1]
 
-run(host=server_host, port=server_port)
+        if argument in ['-d', '--database'] and len(sys.argv) > index + 1:
+            server_db_path = sys.argv[index + 1]
+
+run(host=server_host, port=server_port, db_path=server_db_path)

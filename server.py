@@ -12,7 +12,6 @@ def run(host, port, db_path):
         server.listen(5)
 
         router = Router(db_path)
-        content = '{"test": "String from server !"}'
 
         Console.write('\nWelcome to JSON Server !\n', 'green', bold=True)
         Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
@@ -24,6 +23,7 @@ def run(host, port, db_path):
             pieces = rd.split('\r\n')
 
             current_url = '/'
+
             for p in pieces:
                 if p.startswith('GET'):
                     current_url = p.split()[1].strip('/')
@@ -34,8 +34,8 @@ def run(host, port, db_path):
                 print('\n', pieces, '\n')
 
             output = "HTTP/1.1 200 OK\r\n"
-            output += "Content-Type: application/json; charset=utf-8\r\n"
-            output += f'\r\n{list(content)}\r\n\r\n'
+            output += "Content-Type: application/json; charset=utf-8\r\n\r\n"
+            output += f'{list(content)}\r\n\r\n'
             client.sendall(output.encode())
             client.close()
             # client.shutdown(0)

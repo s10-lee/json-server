@@ -1,8 +1,9 @@
 import sys
+import json
 
 from socket import *
 from src.console import Console
-from src.router import Router
+from src.http import Request, Response
 
 
 def run(host, port, db_path):
@@ -11,7 +12,9 @@ def run(host, port, db_path):
         server.bind((host, int(port)))
         server.listen(5)
 
-        router = Router(db_path)
+        # database file
+        with open(db_path) as f:
+            db = json.load(f)
 
         Console.write('\nWelcome to JSON Server !\n', 'green', bold=True)
         Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
@@ -20,32 +23,46 @@ def run(host, port, db_path):
             client, address = server.accept()
 
             rd = client.recv(5000).decode()
-            pieces = rd.split('\r\n')
 
-            current_url = '/'
+            Console.write('\n*********', 'blue', bold=True)
+            print(rd)
 
-            for p in pieces:
-                if p.startswith('GET'):
-                    current_url = p.split()[1].strip('/')
+            rq = Request(rd)
 
-            content = router.get_response(current_url)
+            if not rq.is_implemented_method():
+                rs = Response(501)
 
-            if len(pieces):
-                print('\n', pieces, '\n')
+            elif not rq.is_allowed_method():
+                rs = Response(405)
 
-            output = "HTTP/1.1 200 OK\r\n"
-            output += "Content-Type: application/json; charset=utf-8\r\n\r\n"
-            output += f'{list(content)}\r\n\r\n'
-            client.sendall(output.encode())
+            else:
+
+                body = None
+                alias = rq.url.strip('/')
+
+                for a in db:
+                    if a == alias:
+                        body = db[a]
+
+                if body is None:
+                    if alias:
+                        rs = Response(404)
+                    else:
+                        rs = Response(204)
+                else:
+                    rs = Response(200, body)
+
+            output = rs.get_result()
+            client.sendall(output)
             client.close()
             # client.shutdown(0)
 
     except KeyboardInterrupt:
         Console.write('\nShutting down...\n', bold=True)
 
-    except Exception as e:
-        Console.write('\nError:', 'red')
-        Console.write(f' {e}\n', 'red', bold=True)
+    # except Exception as e:
+    #     Console.write('\nError:', 'red')
+    #     Console.write(f' {e}\n', 'red', bold=True)
 
     finally:
         server.close()

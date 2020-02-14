@@ -1,12 +1,13 @@
 import sys
 import json
+from datetime import datetime
 
 from socket import *
 
 # <CR><LF> - caret return & line feed (newline)
 CRLF = '\r\n'
 PROTOCOL = 'HTTP/1.1'
-CONTENT_TYPE = 'application/json; charset=utf-8'
+CONTENT_TYPE = 'application/json; charset=UTF-8'
 ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS']
 METHODS = ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS']
 STATUSES = {
@@ -41,23 +42,23 @@ def color_text(text, color, bold=True):
 
 
 def get_response(status=204, body=None):
+    s = sys.version_info
+    dt = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+    response = CRLF.join([f'{PROTOCOL} {status} {STATUSES.get(status)}',
+                          f'Server: Python {s.major}.{s.minor}.{s.micro}',
+                          f'Date: {dt}',
+                          # f'Last-Modified: {dt}',
+                          f'Content-Type: {CONTENT_TYPE}',
+                          'Content-Language: en',
+                          'Access-Control-Allow-Origin: *',
+                          'Connection: close']) + CRLF
     if body:
-        data = [
-            f'{PROTOCOL} {status} {STATUSES.get(status)}',
-            CRLF,
-            f'Content-Type: {CONTENT_TYPE}',
-            CRLF * 2,
-            json.dumps(body),
-            CRLF * 2
-        ]
-    else:
-        data = [
-            f'HTTP/1.1 {status} {STATUSES.get(status)}',
-            CRLF,
-            f'Content-Type: {CONTENT_TYPE}',
-            CRLF,
-        ]
-    return ''.join(data)
+        response += f'{CRLF}{json.dumps(body)}'
+
+    print(color_text('Response:', 'gray'))
+    print(response, CRLF, sep='')
+
+    return response
 
 
 def run(host, port, db_path):
@@ -89,9 +90,11 @@ def run(host, port, db_path):
             body = None
 
             # Request info
-            print('\n', color_text(method, 'gray'),
-                  '\n', color_text(url, 'cyan'),
-                  '\n', pieces[1:], '\n\n')
+            print(CRLF * 2, color_text(method, 'gray'),
+                  CRLF, color_text(url, 'cyan'),
+                  CRLF, pieces[1:],
+                  CRLF * 2,
+                  sep='')
 
             if method not in METHODS:
                 status_code = 501

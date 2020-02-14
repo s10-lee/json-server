@@ -72,10 +72,8 @@ def run(host, port, db_path):
         server.listen(5)
 
         # Say hello to terminal
-        print('\n\n')
-        print(color_text('Welcome to JSON Server !', 'green'))
-        print('\n')
-        print(color_text(f'http://{host}:{port}', 'cyan'))
+        print('\n\n', color_text('Welcome to JSON Server !', 'green'),
+              '\n\n', color_text(f'http://{host}:{port}', 'cyan'))
 
         while True:
             client, address = server.accept()
@@ -91,10 +89,9 @@ def run(host, port, db_path):
             body = None
 
             # Request info
-            print('\n')
-            print(color_text(method, 'gray'), color_text(url, 'cyan'))
-            print(pieces[1:])
-            print('\n')
+            print(color_text(method, 'gray'),
+                  color_text(url, 'cyan'),
+                  '\n', pieces[1:], '\n\n')
 
             if method not in METHODS:
                 status_code = 501

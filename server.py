@@ -2,7 +2,6 @@ import sys
 import json
 
 from socket import *
-from src.console import Console
 
 # <CR><LF> - caret return & line feed (newline)
 CRLF = '\r\n'
@@ -25,6 +24,21 @@ STATUSES = {
     502: 'Bad Gateway'
 }
 
+SCHEMA = {
+    # 'white': '30',
+    'red': '31',
+    'green': '32',
+    'yellow': '33',
+    'blue': '34',
+    'purple': '35',
+    'cyan': '36',
+    'gray': '37'
+}
+
+
+def color_text(text, color, bold=True):
+    return f"\033[{int(bold)};{SCHEMA.get(color, '37')}m{text}\033[0m"
+
 
 def get_response(status=204, body=None):
     if body:
@@ -33,7 +47,7 @@ def get_response(status=204, body=None):
             CRLF,
             f'Content-Type: {CONTENT_TYPE}',
             CRLF * 2,
-            str(body),
+            json.dumps(body),
             CRLF * 2
         ]
     else:
@@ -44,7 +58,6 @@ def get_response(status=204, body=None):
             CRLF,
         ]
     return ''.join(data)
-
 
 
 def run(host, port, db_path):
@@ -58,8 +71,11 @@ def run(host, port, db_path):
         server.bind((host, int(port)))
         server.listen(5)
 
-        Console.write('\nWelcome to JSON Server !\n', 'green', bold=True)
-        Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
+        # Say hello to terminal
+        print('\n\n')
+        print(color_text('Welcome to JSON Server !', 'green'))
+        print('\n')
+        print(color_text(f'http://{host}:{port}', 'cyan'))
 
         while True:
             client, address = server.accept()
@@ -114,11 +130,9 @@ def run(host, port, db_path):
             # client.shutdown(0)
 
     except KeyboardInterrupt:
-        Console.write('\nShutting down...\n', bold=True)
-
-    # except Exception as e:
-    #     Console.write('\nError:', 'red')
-    #     Console.write(f' {e}\n', 'red', bold=True)
+        print('\n\n')
+        print(color_text('Shutting down...', 'gray'))
+        print('\n\n')
 
     finally:
         server.close()
@@ -133,13 +147,13 @@ if __name__ == '__main__':
         for index, argument in enumerate(sys.argv):
 
             # Find port number in arguments
-            if argument in ['--port'] and len(sys.argv) > index + 1:
+            if argument in ['--port', '-p'] and len(sys.argv) > index + 1:
                 server_port = sys.argv[index + 1]
 
             if argument in ['--host'] and len(sys.argv) > index + 1:
                 server_host = sys.argv[index + 1]
 
-            if argument in ['--data'] and len(sys.argv) > index + 1:
+            if argument in ['--data', '-d'] and len(sys.argv) > index + 1:
                 server_db_path = sys.argv[index + 1]
 
     run(host=server_host, port=server_port, db_path=server_db_path)

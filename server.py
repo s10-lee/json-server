@@ -90,6 +90,12 @@ def run(host, port, db_path):
             method, url = pieces[0].split()[0:2]
             body = None
 
+            # Request info
+            print('\n')
+            print(color_text(method, 'gray'), color_text(url, 'cyan'))
+            print(pieces[1:])
+            print('\n')
+
             if method not in METHODS:
                 status_code = 501
             elif method not in ALLOWED_METHODS:

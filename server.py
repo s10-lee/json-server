@@ -3,18 +3,60 @@ import json
 
 from socket import *
 from src.console import Console
-from src.http import Request, Response
+
+# <CR><LF> - caret return & line feed (newline)
+CRLF = '\r\n'
+PROTOCOL = 'HTTP/1.1'
+CONTENT_TYPE = 'application/json; charset=utf-8'
+ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS']
+METHODS = ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS']
+STATUSES = {
+    200: 'OK',
+    201: 'Created',
+    204: 'No Content',
+
+    401: 'Unauthorized',
+    403: 'Forbidden',
+    404: 'Not Found',
+    405: 'Method Not Allowed',
+
+    500: 'Internal Server Error',
+    501: 'Not Implemented',
+    502: 'Bad Gateway'
+}
+
+
+def get_response(status=204, body=None):
+    if body:
+        data = [
+            f'{PROTOCOL} {status} {STATUSES.get(status)}',
+            CRLF,
+            f'Content-Type: {CONTENT_TYPE}',
+            CRLF * 2,
+            str(body),
+            CRLF * 2
+        ]
+    else:
+        data = [
+            f'HTTP/1.1 {status} {STATUSES.get(status)}',
+            CRLF,
+            f'Content-Type: {CONTENT_TYPE}',
+            CRLF,
+        ]
+    return ''.join(data)
+
 
 
 def run(host, port, db_path):
     server = socket(AF_INET, SOCK_STREAM)
+
+    # database file
+    with open(db_path) as f:
+        db = json.load(f)
+
     try:
         server.bind((host, int(port)))
         server.listen(5)
-
-        # database file
-        with open(db_path) as f:
-            db = json.load(f)
 
         Console.write('\nWelcome to JSON Server !\n', 'green', bold=True)
         Console.write(f'http://{host}:{port}\n', 'cyan', bold=True)
@@ -23,37 +65,51 @@ def run(host, port, db_path):
             client, address = server.accept()
 
             rd = client.recv(5000).decode()
+            pieces = rd.split(CRLF)
 
-            Console.write('\n*********', 'blue', bold=True)
-            print(rd)
+            if not len(pieces):
+                print('EMPTY request data!', '\n')
+                break
 
-            rq = Request(rd)
+            method, url = pieces[0].split()[0:2]
+            body = None
 
-            if not rq.is_implemented_method():
-                rs = Response(501)
-
-            elif not rq.is_allowed_method():
-                rs = Response(405)
-
+            if method not in METHODS:
+                status_code = 501
+            elif method not in ALLOWED_METHODS:
+                status_code = 405
             else:
+                parts = url.strip('/').split('/')
+                pk = None
+                if len(parts) > 1:
+                    pk = parts[-1]
+                    alias = '/'.join(parts[0:-1])
+                else:
+                    alias = parts[0]
 
-                body = None
-                alias = rq.url.strip('/')
-
+                # Filter result by route
                 for a in db:
                     if a == alias:
                         body = db[a]
+                        break
 
-                if body is None:
-                    if alias:
-                        rs = Response(404)
+                # Filter result by primary key - object.id
+                if body and pk:
+                    for item in body:
+                        if str(item.get('id')) == pk:
+                            body = item
+                            break
                     else:
-                        rs = Response(204)
-                else:
-                    rs = Response(200, body)
+                        body = None
 
-            output = rs.get_result()
-            client.sendall(output)
+                if not body:
+                    status_code = 404
+                else:
+                    status_code = 200
+
+            output = get_response(status_code, body)
+
+            client.sendall(output.encode())
             client.close()
             # client.shutdown(0)
 
@@ -68,21 +124,22 @@ def run(host, port, db_path):
         server.close()
 
 
-server_host = 'localhost'
-server_port = 8888
-server_db_path = 'db.json'
+if __name__ == '__main__':
+    server_host = 'localhost'
+    server_port = 8888
+    server_db_path = 'db.json'
 
-if len(sys.argv) > 1:
-    for index, argument in enumerate(sys.argv):
+    if len(sys.argv) > 1:
+        for index, argument in enumerate(sys.argv):
 
-        # Find port number in arguments
-        if argument in ['-p', '--port'] and len(sys.argv) > index + 1:
-            server_port = sys.argv[index + 1]
+            # Find port number in arguments
+            if argument in ['--port'] and len(sys.argv) > index + 1:
+                server_port = sys.argv[index + 1]
 
-        if argument in ['-h', '--host'] and len(sys.argv) > index + 1:
-            server_host = sys.argv[index + 1]
+            if argument in ['--host'] and len(sys.argv) > index + 1:
+                server_host = sys.argv[index + 1]
 
-        if argument in ['-d', '--database'] and len(sys.argv) > index + 1:
-            server_db_path = sys.argv[index + 1]
+            if argument in ['--data'] and len(sys.argv) > index + 1:
+                server_db_path = sys.argv[index + 1]
 
-run(host=server_host, port=server_port, db_path=server_db_path)
+    run(host=server_host, port=server_port, db_path=server_db_path)

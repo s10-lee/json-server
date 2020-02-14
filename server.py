@@ -73,11 +73,11 @@ def run(host, port, db_path):
 
         # Say hello to terminal
         print('\n\n', color_text('Welcome to JSON Server !', 'green'),
-              '\n\n', color_text(f'http://{host}:{port}', 'cyan'))
+              '\n\n', color_text(f'http://{host}:{port}', 'cyan'),
+              '\n\n')
 
         while True:
             client, address = server.accept()
-
             rd = client.recv(5000).decode()
             pieces = rd.split(CRLF)
 
@@ -89,8 +89,8 @@ def run(host, port, db_path):
             body = None
 
             # Request info
-            print(color_text(method, 'gray'),
-                  color_text(url, 'cyan'),
+            print('\n', color_text(method, 'gray'),
+                  '\n', color_text(url, 'cyan'),
                   '\n', pieces[1:], '\n\n')
 
             if method not in METHODS:
@@ -130,9 +130,10 @@ def run(host, port, db_path):
 
             client.sendall(output.encode())
             client.close()
-            # client.shutdown(0)
+            # client.shutdown()
 
     except KeyboardInterrupt:
+        # TODO: How to client.shutdown(SHUT_RDWR) ?
         print('\n\n')
         print(color_text('Shutting down...', 'gray'))
         print('\n\n')

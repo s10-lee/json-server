@@ -25,6 +25,8 @@ STATUSES = {
     502: 'Bad Gateway'
 }
 
+# test commit
+
 SCHEMA = {
     # 'white': '30',
     'red': '31',

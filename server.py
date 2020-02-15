@@ -4,8 +4,9 @@ from datetime import datetime
 
 from socket import *
 
-# <CR><LF> - caret return & line feed (newline)
+# <CR><LF> - carriage return & line feed (newline)
 CRLF = '\r\n'
+PACKET_SIZE = 1024
 PROTOCOL = 'HTTP/1.1'
 CONTENT_TYPE = 'application/json; charset=UTF-8'
 ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS']
@@ -47,9 +48,8 @@ def get_response(status=204, body=None):
     s = sys.version_info
     dt = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
     response = CRLF.join([f'{PROTOCOL} {status} {STATUSES.get(status)}',
-                          f'Server: Python {s.major}.{s.minor}.{s.micro}',
+                          f'Server: JSON-Server, Python {s.major}.{s.minor}.{s.micro}',
                           f'Date: {dt}',
-                          # f'Last-Modified: {dt}',
                           f'Content-Type: {CONTENT_TYPE}',
                           'Content-Language: en',
                           'Access-Control-Allow-Origin: *',
@@ -81,6 +81,16 @@ def run(host, port, db_path):
 
         while True:
             client, address = server.accept()
+
+            print('Address:', address)
+
+            # rd = ''
+            # while True:
+            #     data = client.recv(PACKET_SIZE)
+            #     if not data:
+            #         break
+            #     rd += data.decode()
+
             rd = client.recv(5000).decode()
             pieces = rd.split(CRLF)
 
@@ -88,7 +98,7 @@ def run(host, port, db_path):
                 print('EMPTY request data!', '\n')
                 break
 
-            method, url = pieces[0].split()[0:2]
+            method, url = pieces[0].split(' ')[0:2]
             body = None
 
             # Request info
@@ -134,8 +144,9 @@ def run(host, port, db_path):
             output = get_response(status_code, body)
 
             client.sendall(output.encode())
+            client.shutdown(SHUT_RDWR)
             client.close()
-            # client.shutdown()
+            # client.shutdown(SHUT_RDWR)
 
     except KeyboardInterrupt:
         # TODO: How to client.shutdown(SHUT_RDWR) ?
@@ -144,6 +155,8 @@ def run(host, port, db_path):
         print('\n\n')
 
     finally:
+        print('Finally')
+        # server.shutdown(SHUT_RDWR)
         server.close()
 
 

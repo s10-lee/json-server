@@ -94,7 +94,8 @@ def run(host, port, db_path):
             rd = client.recv(5000).decode()
             pieces = rd.split(CRLF)
 
-            print('\r\n*************\r\n', pieces, '\r\n*************\r\n', sep='')
+            print(CRLF, color_text('*************', 'cyan'), CRLF, pieces,
+                  CRLF, color_text('*************', 'cyan'), CRLF, sep='')
 
             if len(pieces) < 2:
                 print('EMPTY request data!', '\n')

@@ -57,8 +57,8 @@ def get_response(status=204, body=None):
     if body:
         response += f'{CRLF}{json.dumps(body)}'
 
-    print(color_text('Response:', 'gray'))
-    print(response, CRLF, sep='')
+    # print(color_text('Response:', 'gray'))
+    # print(response, CRLF, sep='')
 
     return response
 
@@ -82,8 +82,6 @@ def run(host, port, db_path):
         while True:
             client, address = server.accept()
 
-            # print('Address:', address)
-
             # rd = ''
             # while True:
             #     data = client.recv(PACKET_SIZE)
@@ -91,14 +89,17 @@ def run(host, port, db_path):
             #         break
             #     rd += data.decode()
 
+            td = datetime.now().strftime('%H:%M:%S')
             rd = client.recv(5000).decode()
             pieces = rd.split(CRLF)
 
-            print(CRLF, color_text('*************', 'cyan'), CRLF, pieces,
-                  CRLF, color_text('*************', 'cyan'), CRLF, sep='')
+            print(CRLF, color_text(f'************ {td} **************', 'cyan'),
+                  CRLF, 'Address: ', address,
+                  CRLF, color_text('>>>', 'cyan'),
+                  CRLF, rd, sep='')
 
             if len(pieces) < 2:
-                print('EMPTY request data!', '\n')
+                print('EMPTY request data!', CRLF * 2, sep='')
                 continue
 
             method, url = pieces[0].split()[0:2]
@@ -151,9 +152,9 @@ def run(host, port, db_path):
 
     except KeyboardInterrupt:
         # TODO: How to client.shutdown(SHUT_RDWR) ?
-        print('\n\n')
+        print(CRLF)
         print(color_text('Shutting down...', 'gray'))
-        print('\n\n')
+        print(CRLF)
 
     finally:
         # print('Finally')

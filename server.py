@@ -82,7 +82,7 @@ def run(host, port, db_path):
         while True:
             client, address = server.accept()
 
-            print('Address:', address)
+            # print('Address:', address)
 
             # rd = ''
             # while True:
@@ -94,19 +94,20 @@ def run(host, port, db_path):
             rd = client.recv(5000).decode()
             pieces = rd.split(CRLF)
 
-            if not len(pieces):
-                print('EMPTY request data!', '\n')
-                break
+            print('\r\n*************\r\n', pieces, '\r\n*************\r\n', sep='')
 
-            method, url = pieces[0].split(' ')[0:2]
+            if len(pieces) < 2:
+                print('EMPTY request data!', '\n')
+                continue
+
+            method, url = pieces[0].split()[0:2]
             body = None
 
             # Request info
-            print(CRLF * 2, color_text(method, 'gray'),
-                  CRLF, color_text(url, 'cyan'),
-                  CRLF, pieces[1:],
-                  CRLF * 2,
-                  sep='')
+            # print(CRLF * 2, color_text(method, 'gray'),
+            #       CRLF, color_text(url, 'cyan'),
+            #       CRLF, pieces[1:],
+            #       CRLF * 2, sep='')
 
             if method not in METHODS:
                 status_code = 501
@@ -144,9 +145,8 @@ def run(host, port, db_path):
             output = get_response(status_code, body)
 
             client.sendall(output.encode())
-            client.shutdown(SHUT_RDWR)
-            client.close()
             # client.shutdown(SHUT_RDWR)
+            client.close()
 
     except KeyboardInterrupt:
         # TODO: How to client.shutdown(SHUT_RDWR) ?
@@ -155,7 +155,7 @@ def run(host, port, db_path):
         print('\n\n')
 
     finally:
-        print('Finally')
+        # print('Finally')
         # server.shutdown(SHUT_RDWR)
         server.close()
 

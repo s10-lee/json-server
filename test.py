@@ -1,24 +1,32 @@
-import asyncio
-import time
+from socket import *
+from server import CRLF
 
+server = socket(AF_INET, SOCK_STREAM)
+server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+server.bind(('127.0.0.1', 8888))
+server.listen(5)
 
-async def say_after(delay, what):
-    await asyncio.sleep(delay)
-    print(what)
+print('http://127.0.0.1:8888/')
 
+while True:
+    client, address = server.accept()
 
-async def main():
-    print(f'Start: {time.strftime("%X")}')
+    rd = client.recv(5000).decode()
+    print(client)
+    print(rd)
 
-    task1 = asyncio.create_task(
-        say_after(2, 'Hello'))
+    # pieces = rd.split(CRLF)
+    # method, url = pieces[0].split()[0:2]
 
-    task2 = asyncio.create_task(
-        say_after(3, 'World'))
+    body = ''.join([
+        'HTTP/1.1 200 OK', CRLF,
+        'Content-Type: application/json; charset=UTF-8', CRLF,
+        'Connection: close',
+        CRLF, CRLF,
+        '{"some": "value"}'
+    ])
 
-    await task1
-    await task2
+    client.sendall(body.encode())
+    # client.shutdown(SHUT_RDWR)
+    client.close()
 
-    print(f'Finish: {time.strftime("%X")}')
-
-asyncio.run(main())

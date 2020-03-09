@@ -6,7 +6,7 @@ from socket import *
 
 # <CR><LF> - carriage return & line feed (newline)
 CRLF = '\r\n'
-PACKET_SIZE = 1024
+PACKET_SIZE = 4096
 PROTOCOL = 'HTTP/1.1'
 CONTENT_TYPE = 'application/json; charset=UTF-8'
 ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS']
@@ -26,8 +26,6 @@ STATUSES = {
     502: 'Bad Gateway'
 }
 
-# test commit
-
 SCHEMA = {
     # 'white': '30',
     'red': '31',
@@ -44,27 +42,46 @@ def color_text(text, color, bold=True):
     return f"\033[{int(bold)};{SCHEMA.get(color, '37')}m{text}\033[0m"
 
 
-def get_response(status=204, body=None):
+def green(text):
+    return f"\033[1;32m{text}\033[0m"
+
+
+def cyan(text):
+    return f"\033[1;36m{text}\033[0m"
+
+
+def yellow(text):
+    return f"\033[1;33m{text}\033[0m"
+
+
+def get_response(status=204, body=None, extra_headers=None):
     s = sys.version_info
     dt = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
-    response = CRLF.join([f'{PROTOCOL} {status} {STATUSES.get(status)}',
-                          f'Server: JSON-Server, Python {s.major}.{s.minor}.{s.micro}',
-                          f'Date: {dt}',
-                          f'Content-Type: {CONTENT_TYPE}',
-                          'Content-Language: en',
-                          'Access-Control-Allow-Origin: *',
-                          'Connection: close']) + CRLF
-    if body:
-        response += f'{CRLF}{json.dumps(body)}'
+    start_line = f'{PROTOCOL} {status} {STATUSES.get(status)}'
+    headers = {
+        'Server': f'JSON-Server, Python {s.major}.{s.minor}.{s.micro}',
+        'Date': dt,
+        'Content-Type': CONTENT_TYPE,
+        'Connection': 'close'
+    }
 
-    # print(color_text('Response:', 'gray'))
-    # print(response, CRLF, sep='')
+    if extra_headers:
+        for k, v in extra_headers.items():
+            headers[k] = v
+
+    lines = [start_line] + [f'{k}: {v}' for k, v in headers.items()] + [CRLF]
+    response = CRLF.join(lines)
+
+    if body:
+        response += json.dumps(body)
 
     return response
 
 
 def run(host, port, db_path):
+
     server = socket(AF_INET, SOCK_STREAM)
+    server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
     # database file
     with open(db_path) as f:
@@ -74,47 +91,53 @@ def run(host, port, db_path):
         server.bind((host, int(port)))
         server.listen(5)
 
-        # Say hello to terminal
-        print('\n\n', color_text('Welcome to JSON Server !', 'green'),
-              '\n\n', color_text(f'http://{host}:{port}', 'cyan'),
-              '\n\n')
+        # Greetings !
+        print(CRLF, green('Welcome to JSON Server !'), cyan(f'http://{host}:{port}'), sep=CRLF * 2)
 
         while True:
+            headers = {}
             client, address = server.accept()
 
-            # rd = ''
-            # while True:
-            #     data = client.recv(PACKET_SIZE)
-            #     if not data:
-            #         break
-            #     rd += data.decode()
+            # todo: Work around timeout
+            # client.settimeout(60)
+            # except socket.timeout
 
             td = datetime.now().strftime('%H:%M:%S')
-            rd = client.recv(5000).decode()
-            pieces = rd.split(CRLF)
+            rd = client.recv(PACKET_SIZE).decode()
 
-            print(CRLF, color_text(f'************ {td} **************', 'cyan'),
-                  CRLF, 'Address: ', address,
-                  CRLF, color_text('>>>', 'cyan'),
-                  CRLF, rd, sep='')
-
-            if len(pieces) < 2:
-                print('EMPTY request data!', CRLF * 2, sep='')
+            # Check received data
+            if not rd:
+                print(yellow('EMPTY !'), CRLF * 2, sep='')
                 continue
+
+            print(CRLF, color_text(f'************ {td} **************', 'cyan'), CRLF, rd, sep='')
+            pieces = rd.split(CRLF)
+            # if len(pieces) < 2:
+            #     print('EMPTY request data!', CRLF * 2, sep='')
+            #     continue
 
             method, url = pieces[0].split()[0:2]
             body = None
+            status_code = 200
 
-            # Request info
-            # print(CRLF * 2, color_text(method, 'gray'),
-            #       CRLF, color_text(url, 'cyan'),
-            #       CRLF, pieces[1:],
-            #       CRLF * 2, sep='')
+            # Favicon
+            # todo: get_response() should be using instead
+            if url == '/favicon.ico':
+                with open('favicon.ico', 'rb') as fp:
+                    [ico] = fp.readlines()
+                    # Mime image/x-icon
+                    headers = CRLF.join([f'{PROTOCOL} 200 OK', 'Content-type: image/vnd.microsoft.icon']) + CRLF * 2
+                    output = headers.encode() + ico
+                    client.sendall(output)
+
+                print(green('Favicon OK'))
+                continue
 
             if method not in METHODS:
                 status_code = 501
             elif method not in ALLOWED_METHODS:
                 status_code = 405
+                headers = {'Allow': ', '.join(ALLOWED_METHODS)}
             else:
                 parts = url.strip('/').split('/')
                 pk = None
@@ -141,8 +164,6 @@ def run(host, port, db_path):
 
                 if not body:
                     status_code = 404
-                else:
-                    status_code = 200
 
             output = get_response(status_code, body)
 
@@ -151,14 +172,11 @@ def run(host, port, db_path):
             client.close()
 
     except KeyboardInterrupt:
-        # TODO: How to client.shutdown(SHUT_RDWR) ?
         print(CRLF)
         print(color_text('Shutting down...', 'gray'))
         print(CRLF)
 
     finally:
-        # print('Finally')
-        # server.shutdown(SHUT_RDWR)
         server.close()
 
 
@@ -174,7 +192,7 @@ if __name__ == '__main__':
             if argument in ['--port', '-p'] and len(sys.argv) > index + 1:
                 server_port = sys.argv[index + 1]
 
-            if argument in ['--host'] and len(sys.argv) > index + 1:
+            if argument in ['--host', '-h'] and len(sys.argv) > index + 1:
                 server_host = sys.argv[index + 1]
 
             if argument in ['--data', '-d'] and len(sys.argv) > index + 1:

@@ -137,7 +137,7 @@ def run(host, port, db_path):
                 status_code = 501
             elif method not in ALLOWED_METHODS:
                 status_code = 405
-                headers = {'Allow': ', '.join(ALLOWED_METHODS)}
+                headers['Allow'] = ', '.join(ALLOWED_METHODS)
             else:
                 parts = url.strip('/').split('/')
                 pk = None
@@ -165,10 +165,10 @@ def run(host, port, db_path):
                 if not body:
                     status_code = 404
 
-            output = get_response(status_code, body)
+            output = get_response(status_code, body, headers)
 
             client.sendall(output.encode())
-            # client.shutdown(SHUT_RDWR)
+            client.shutdown(SHUT_RDWR)
             client.close()
 
     except KeyboardInterrupt:

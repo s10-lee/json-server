@@ -1,8 +1,8 @@
 import sys
 import json
 from requests import Request, Session
-
-
+from server import color_text, STATUSES
+"""
 def pretty_print(obj, indent=0):
     if isinstance(obj, list):
         print((indent * ' ') + '[')
@@ -26,7 +26,7 @@ def pretty_print(obj, indent=0):
         elif isinstance(obj, str):
             obj = f"'{obj}'"
         print((2 * indent * ' ') + obj)
-
+"""
 
 if __name__ == '__main__':
     method = 'GET'
@@ -59,11 +59,21 @@ if __name__ == '__main__':
         r = Request(method, url, data=data, headers=headers).prepare()
         resp = s.send(r)
 
-        print('*******************************************************')
-        print(resp.status_code, method, resp.url)
+        print(' ')
+        print(method.upper(), color_text(resp.url, 'cyan'))
+
+        code = resp.status_code
+        code_color = 'green'
+        if code >= 400:
+            code_color = 'yellow'
+        if code >= 500:
+            code_color = 'red'
+
+        print(color_text(f'{code} {STATUSES.get(code)}', code_color))
+
+        print(' ')
         print('\r\n'.join([f'{k}: {v}' for k, v in resp.headers.items()]))
         # print(json.dumps(resp.json(), sort_keys=False, indent=4))
         if resp.content:
-            # pretty_print(resp.json())
             print(resp.json())
         print('\r\n')

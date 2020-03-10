@@ -1,32 +1,7 @@
 import sys
-import json
+# import json
 from requests import Request, Session
-from server import color_text, STATUSES, CONTENT_TYPE
-"""
-def pretty_print(obj, indent=0):
-    if isinstance(obj, list):
-        print((indent * ' ') + '[')
-        for i in obj:
-            pretty_print(i, indent=indent + 2)
-        print((indent * ' ') + ']')
-    elif isinstance(obj, dict):
-        print((indent * ' ') + '{')
-        for k, v in obj.items():
-            if isinstance(v, int) or isinstance(v, float):
-                print(((indent + 2) * ' ') + f"{k}: {v}")
-            if isinstance(v, str):
-                print(((indent + 2) * ' ') + f"{k}: '{v}'")
-            else:
-                pretty_print(v, indent=indent + 2)
-        print((indent * ' ') + '}')
-
-    else:
-        if isinstance(obj, int) or isinstance(obj, float):
-            obj = str(obj)
-        elif isinstance(obj, str):
-            obj = f"'{obj}'"
-        print((2 * indent * ' ') + obj)
-"""
+from server import color_text, STATUSES, CONTENT_TYPE, CRLF
 
 if __name__ == '__main__':
     method = 'GET'
@@ -68,7 +43,7 @@ if __name__ == '__main__':
             code_color = 'red'
 
         print(color_text(f'{code} {STATUSES.get(code)}', code_color))
-        print('\r\n'.join([f'{k}: {v}' for k, v in resp.headers.items()]))
+        print(CRLF.join([f'{k}: {v}' for k, v in resp.headers.items()]))
         if resp.content:
-            print('\r\n', resp.json(), sep='')
-        print('\r\n')
+            print(CRLF, resp.json(), sep='')
+        print(CRLF)

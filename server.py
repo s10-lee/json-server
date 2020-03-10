@@ -4,7 +4,7 @@ from datetime import datetime
 from socket import *
 from src.db import Database
 from src.settings import CRLF, PROTOCOL, CONTENT_TYPE, STATUSES, PACKET_SIZE, ALLOWED_METHODS, METHODS
-from src.console import color_text, green, yellow, cyan
+from src.console import color_text, print_line
 
 
 def get_response(status=204, body=None, extra=None):
@@ -41,9 +41,6 @@ def run(host, port, db_path):
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
     # Database
-    with open(db_path) as f:
-        db = json.load(f)
-
     database = Database(db_path)
     # database.save()
 
@@ -52,7 +49,7 @@ def run(host, port, db_path):
         server.listen(5)
 
         # Greetings
-        print(CRLF, green('Welcome to JSON Server !'), cyan(f'http://{host}:{port}'), sep=CRLF * 2)
+        print_line(f'<nl><green>Welcome to JSON Server !</green><nl><nl><cyan>http://{host}:{port}/</cyan><nl>')
 
         while True:
             headers = {}
@@ -67,7 +64,7 @@ def run(host, port, db_path):
 
             # Check received data
             if not rd:
-                print(yellow('EMPTY !'), CRLF * 2, sep='')
+                print_line('<yellow>EMPTY !</yellow><nl><nl>')
                 client.close()
                 continue
 
@@ -84,10 +81,10 @@ def run(host, port, db_path):
                     client.sendall(output)
                     client.close()
 
-                print(green('/favicon.ico'))
+                print_line('<green>/favicon.ico</green>')
                 continue
 
-            print(CRLF, color_text(f'************ {td} **************', 'cyan'), CRLF, rd, sep='')
+            print_line(f'<nl><cyan>************ {td} **************</cyan><nl>{rd}')
 
             if method not in METHODS:
                 status_code = 501
@@ -107,22 +104,9 @@ def run(host, port, db_path):
                 body = database.select(alias, pk)
 
                 if method == 'POST':
-                    # todo: create new entry in db.json
                     print('Method POST')
                 elif method == 'PUT':
-                    # todo: update entry
                     print('Method PUT')
-
-                print(body)
-
-                # Filter result by primary key - object.id
-                # if body and pk:
-                #     for item in body:
-                #         if str(item.get('id')) == pk:
-                #             body = item
-                #             break
-                #     else:
-                #         body = None
 
                 if not body:
                     status_code = 404
@@ -134,9 +118,7 @@ def run(host, port, db_path):
             client.close()
 
     except KeyboardInterrupt:
-        print(CRLF)
-        print(color_text('Shutting down...', 'gray'))
-        print(CRLF)
+        print_line('<nl><gray>Shutting down...</gray><nl>')
 
     finally:
         server.close()

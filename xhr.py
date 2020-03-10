@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
         for i, a in enumerate(args):
             n = i + 1
-            print(i, a)
+            # print(i, a)
 
             if a in ['--data', '-d'] and len(sys.argv) > n:
                 data = sys.argv[n]
@@ -63,6 +63,7 @@ if __name__ == '__main__':
         print(resp.status_code, method, resp.url)
         print('\r\n'.join([f'{k}: {v}' for k, v in resp.headers.items()]))
         # print(json.dumps(resp.json(), sort_keys=False, indent=4))
-        # pretty_print(resp.json())
-        print(resp.json())
+        if resp.content:
+            # pretty_print(resp.json())
+            print(resp.json())
         print('\r\n')

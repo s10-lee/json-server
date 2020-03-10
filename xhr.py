@@ -1,7 +1,38 @@
+#
+# Making HTTP requests from terminal.
+#
+# From terminal:
+#   > python3 xhr.py [METHOD:GET] URL [OPTIONS]
+#
+#   METHOD:
+#       GET, HEAD, POST, etc. Case insensitive. Can be omitted. GET by default.
+#
+#   URL:
+#       Protocol and port can be omitted.
+#       [PROTOCOL]HOST[:PORT]/path/to/whatever/
+#
+#   OPTIONS:
+#       --data, -d      JSON Data                       None
+#       --headers, -h   Additional HTTP headers         {'Content-type': 'application/json; charset=UTF-8'}
+#
+#   USAGE:
+#
+#       > python3 xhr.py POST http://127.0.0.1/your/url/ --data "{'name': 'John'}"
+#       > python3 xhr.py localhost:8888 -h '{"Cache-control": "no-cache"}"
+#
+#       Known issue - troubles with single / double quotes
+#
+#   TIP:
+#       Add alias to bash_profile
+#       alias xhr="/path/to/python3 /path/to/xhr.py"
+#
+
 import sys
-# import json
+import json
 from requests import Request, Session
-from server import color_text, STATUSES, CONTENT_TYPE, CRLF
+from server import STATUSES, CONTENT_TYPE, CRLF
+from src.console import print_line
+
 
 if __name__ == '__main__':
     method = 'GET'
@@ -27,23 +58,23 @@ if __name__ == '__main__':
                 data = args[i + 1].encode('utf-8')
 
             if a in ['--headers', '-h'] and len(args) >= i + 1:
-                headers = args[i + 1]
+                headers = json.loads(args[i + 1])
 
         s = Session()
         r = Request(method, url, data=data, headers=headers).prepare()
         resp = s.send(r)
 
-        print(method.upper(), color_text(resp.url, 'cyan'))
+        print_line(f'{method.upper()} <cyan>{resp.url}</cyan>')
 
         code = resp.status_code
-        code_color = 'green'
+        color = 'green'
         if code >= 400:
-            code_color = 'yellow'
+            color = 'yellow'
         if code >= 500:
-            code_color = 'red'
+            color = 'red'
 
-        print(color_text(f'{code} {STATUSES.get(code)}', code_color))
+        print_line(f'<{color}>{code} {STATUSES.get(code)}</{color}>')
         print(CRLF.join([f'{k}: {v}' for k, v in resp.headers.items()]))
         if resp.content:
             print(CRLF, resp.json(), sep='')
-        print(CRLF)
+        print_line('<nl>')

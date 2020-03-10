@@ -4,7 +4,7 @@ from datetime import datetime
 from socket import *
 from src.db import Database
 from src.settings import CRLF, PROTOCOL, CONTENT_TYPE, STATUSES, PACKET_SIZE, ALLOWED_METHODS, METHODS
-from src.console import color_text, print_line
+from src.console import print_line
 
 
 def get_response(status=204, body=None, extra=None):

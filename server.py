@@ -2,59 +2,9 @@ import sys
 import json
 from datetime import datetime
 from socket import *
-
-# <CR><LF> - carriage return & line feed (newline)
-CRLF = '\r\n'
-PACKET_SIZE = 4096
-PROTOCOL = 'HTTP/1.1'
-CONTENT_TYPE = 'application/json; charset=UTF-8'
-HEADERS = ['Server', 'Date', 'Allow', 'Content-type', 'Connection']
-ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS']
-METHODS = ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS']
-STATUSES = {
-    200: 'OK',
-    201: 'Created',
-    204: 'No Content',
-
-    401: 'Unauthorized',
-    403: 'Forbidden',
-    404: 'Not Found',
-    405: 'Method Not Allowed',
-
-    500: 'Internal Server Error',
-    501: 'Not Implemented',
-    502: 'Bad Gateway'
-}
-
-SCHEMA = {
-    'red': '31',
-    'green': '32',
-    'yellow': '33',
-    'blue': '34',
-    'purple': '35',
-    'cyan': '36',
-    'gray': '37'
-}
-
-
-def color_text(text, color, bold=True):
-    return f"\033[{int(bold)};{SCHEMA.get(color, '37')}m{text}\033[0m"
-
-
-def red(text):
-    return f"\033[1;31m{text}\033[0m"
-
-
-def green(text):
-    return f"\033[1;32m{text}\033[0m"
-
-
-def cyan(text):
-    return f"\033[1;36m{text}\033[0m"
-
-
-def yellow(text):
-    return f"\033[1;33m{text}\033[0m"
+from src.db import Database
+from src.settings import CRLF, PROTOCOL, CONTENT_TYPE, STATUSES, PACKET_SIZE, ALLOWED_METHODS, METHODS
+from src.console import color_text, green, yellow, cyan
 
 
 def get_response(status=204, body=None, extra=None):
@@ -94,6 +44,9 @@ def run(host, port, db_path):
     with open(db_path) as f:
         db = json.load(f)
 
+    database = Database(db_path)
+    # database.save()
+
     try:
         server.bind((host, int(port)))
         server.listen(5)
@@ -126,11 +79,8 @@ def run(host, port, db_path):
             # Favicon
             if url == '/favicon.ico':
                 with open('favicon.ico', 'rb') as fp:
-                    # h = get_response(status_code, extra={'Content-type': 'image/vnd.microsoft.icon'})
-                    # output = h.encode() + fp.readlines()[0]
                     output = get_response(status_code, fp.readlines()[0],
                                           {'Content-type': 'image/vnd.microsoft.icon'})
-
                     client.sendall(output)
                     client.close()
 
@@ -153,20 +103,26 @@ def run(host, port, db_path):
                 else:
                     alias = parts[0]
 
-                # Filter result by route
-                for a in db:
-                    if a == alias:
-                        body = db[a]
-                        break
+                # Search by route_name and primary_key
+                body = database.select(alias, pk)
+
+                if method == 'POST':
+                    # todo: create new entry in db.json
+                    print('Method POST')
+                elif method == 'PUT':
+                    # todo: update entry
+                    print('Method PUT')
+
+                print(body)
 
                 # Filter result by primary key - object.id
-                if body and pk:
-                    for item in body:
-                        if str(item.get('id')) == pk:
-                            body = item
-                            break
-                    else:
-                        body = None
+                # if body and pk:
+                #     for item in body:
+                #         if str(item.get('id')) == pk:
+                #             body = item
+                #             break
+                #     else:
+                #         body = None
 
                 if not body:
                     status_code = 404

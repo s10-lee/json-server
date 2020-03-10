@@ -4,9 +4,25 @@ from collections import OrderedDict
 from src.settings import PK_FIELDS
 
 
-
 class DatabaseRecord:
-    pass
+
+    def __init__(self, record):
+        if isinstance(record, dict):
+            self.items = record.items()
+
+    def __repr__(self):
+        result = []
+        for k, v in self.items:
+            if isinstance(v, int) or isinstance(v, bool):
+                result.append(f'"{k}": {str(v).lower()}')
+            else:
+                result.append(f'"{k}": "{v}"')
+        output = '{\r\n  ' + ',\r\n  '.join(result) + '\r\n}'
+        return output
+
+    def filter(self, search):
+        r = [field for field, value in self.items if field in search and str(value) == str(search.get(field))]
+        return r
 
 
 class Database:
@@ -16,7 +32,6 @@ class Database:
             with open(db_path, 'r', encoding='utf-8') as f:
                 self._file = db_path
                 self._db = json.load(f)
-                # self._db = json.loads(''.join(f.readlines()))
         except FileNotFoundError as err:
             print(err)
             return
@@ -38,7 +53,7 @@ class Database:
     def select(self, route, pk=None):
         result = self._db.get(route)
         convert = str
-        default = ''
+        default = False
         search = ['slug', 'alias']
 
         if result and pk:
@@ -47,10 +62,6 @@ class Database:
                 search = ['id', 'pk']
                 convert = int
                 default = 0
-
-            print('Search is')
-            print(search)
-            print('PK:', type(pk), pk)
 
             for item in result:
                 for field_name in search:

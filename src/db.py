@@ -1,7 +1,6 @@
 import json
 import os
-from collections import OrderedDict
-from src.settings import PK_FIELDS
+from src.settings import CRLF
 
 
 class DatabaseRecord:
@@ -36,10 +35,7 @@ class Database:
             print(err)
             return
 
-    @property
-    def db(self):
-        return self._db
-
+    # Generate name for debug
     def _get_name(self):
         i = 0
         while True:
@@ -71,12 +67,22 @@ class Database:
 
         return result
 
+    # Save data to JSON File
     def save(self):
         # self._get_name()
         file_name = self._file
         with open(file_name, 'w', encoding='utf-8') as f:
             json.dump(self._db, f, sort_keys=False, indent=2, ensure_ascii=False)
 
-    def create_entity(self, route, data):
+    #
+    # todo: Database methods
+    #
+    def insert(self, route, data):
+        pass
+
+    def update(self, route, data, pk=None):
+        pass
+
+    def delete(self, route, pk=None):
         pass
 

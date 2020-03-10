@@ -36,11 +36,3 @@ SCHEMA = {
     'cyan': '36',
     'gray': '37'
 }
-
-# Database search fields
-PK_FIELDS = {
-    'id': int,
-    'pk': int,
-    'slug': str,
-    'alias': str
-}

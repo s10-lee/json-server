@@ -1,8 +1,9 @@
 #
 # Making HTTP requests from terminal.
+# Simple curl wrapper.
 #
-# From terminal:
-#   > python3 xhr.py [METHOD:GET] URL [OPTIONS]
+#   COMMAND:
+#       > python3 xhr.py [METHOD:GET] URL [OPTIONS]
 #
 #   METHOD:
 #       GET, HEAD, POST, etc. Case insensitive. Can be omitted. GET by default.
@@ -26,6 +27,7 @@
 #       Add alias to bash_profile
 #       alias xhr="/path/to/python3 /path/to/xhr.py"
 #
+
 
 import sys
 import json

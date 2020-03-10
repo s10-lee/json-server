@@ -1,7 +1,6 @@
 import sys
 import json
 from datetime import datetime
-
 from socket import *
 
 # <CR><LF> - carriage return & line feed (newline)
@@ -9,6 +8,7 @@ CRLF = '\r\n'
 PACKET_SIZE = 4096
 PROTOCOL = 'HTTP/1.1'
 CONTENT_TYPE = 'application/json; charset=UTF-8'
+HEADERS = ['Server', 'Date', 'Allow', 'Content-type', 'Connection']
 ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS']
 METHODS = ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS']
 STATUSES = {
@@ -27,7 +27,6 @@ STATUSES = {
 }
 
 SCHEMA = {
-    # 'white': '30',
     'red': '31',
     'green': '32',
     'yellow': '33',
@@ -54,26 +53,31 @@ def yellow(text):
     return f"\033[1;33m{text}\033[0m"
 
 
-def get_response(status=204, body=None, extra_headers=None):
+def get_response(status=204, body=None, extra=None):
     s = sys.version_info
     dt = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
-    start_line = f'{PROTOCOL} {status} {STATUSES.get(status)}'
-    headers = {
+    r = [f'{PROTOCOL} {status} {STATUSES.get(status)}']
+    h = {
         'Server': f'JSON-Server, Python {s.major}.{s.minor}.{s.micro}',
         'Date': dt,
         'Content-Type': CONTENT_TYPE,
         'Connection': 'close'
     }
 
-    if extra_headers:
-        for k, v in extra_headers.items():
-            headers[k] = v
+    if extra:
+        h.update(extra)
 
-    lines = [start_line] + [f'{k}: {v}' for k, v in headers.items()] + [CRLF]
-    response = CRLF.join(lines)
+    r += [f'{k}: {v}' for k, v in h.items()] + [CRLF]
+    response = CRLF.join(r).encode()
 
     if body:
-        response += json.dumps(body)
+        if isinstance(body, dict) or isinstance(body, list):
+            body = json.dumps(body)
+
+        if isinstance(body, str):
+            body = body.encode()
+
+        response += body
 
     return response
 
@@ -83,7 +87,7 @@ def run(host, port, db_path):
     server = socket(AF_INET, SOCK_STREAM)
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
-    # database file
+    # Database
     with open(db_path) as f:
         db = json.load(f)
 
@@ -91,7 +95,7 @@ def run(host, port, db_path):
         server.bind((host, int(port)))
         server.listen(5)
 
-        # Greetings !
+        # Greetings
         print(CRLF, green('Welcome to JSON Server !'), cyan(f'http://{host}:{port}'), sep=CRLF * 2)
 
         while True:
@@ -108,30 +112,29 @@ def run(host, port, db_path):
             # Check received data
             if not rd:
                 print(yellow('EMPTY !'), CRLF * 2, sep='')
+                client.close()
                 continue
 
-            print(CRLF, color_text(f'************ {td} **************', 'cyan'), CRLF, rd, sep='')
             pieces = rd.split(CRLF)
-            # if len(pieces) < 2:
-            #     print('EMPTY request data!', CRLF * 2, sep='')
-            #     continue
-
             method, url = pieces[0].split()[0:2]
             body = None
             status_code = 200
 
             # Favicon
-            # todo: get_response() should be using instead
             if url == '/favicon.ico':
                 with open('favicon.ico', 'rb') as fp:
-                    [ico] = fp.readlines()
-                    # Mime image/x-icon
-                    headers = CRLF.join([f'{PROTOCOL} 200 OK', 'Content-type: image/vnd.microsoft.icon']) + CRLF * 2
-                    output = headers.encode() + ico
-                    client.sendall(output)
+                    # h = get_response(status_code, extra={'Content-type': 'image/vnd.microsoft.icon'})
+                    # output = h.encode() + fp.readlines()[0]
+                    output = get_response(status_code, fp.readlines()[0],
+                                          {'Content-type': 'image/vnd.microsoft.icon'})
 
-                print(green('Favicon OK'))
+                    client.sendall(output)
+                    client.close()
+
+                print(green('/favicon.ico'))
                 continue
+
+            print(CRLF, color_text(f'************ {td} **************', 'cyan'), CRLF, rd, sep='')
 
             if method not in METHODS:
                 status_code = 501
@@ -167,7 +170,7 @@ def run(host, port, db_path):
 
             output = get_response(status_code, body, headers)
 
-            client.sendall(output.encode())
+            client.sendall(output)
             client.shutdown(SHUT_RDWR)
             client.close()
 

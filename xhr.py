@@ -1,7 +1,7 @@
 import sys
 import json
 from requests import Request, Session
-from server import color_text, STATUSES
+from server import color_text, STATUSES, CONTENT_TYPE
 """
 def pretty_print(obj, indent=0):
     if isinstance(obj, list):
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     method = 'GET'
     url = None
     data = None
-    headers = None
+    headers = {'Content-type': CONTENT_TYPE}
     args = sys.argv[1:]
     if len(sys.argv) > 0:
         first = args.pop(0)
@@ -46,20 +46,18 @@ if __name__ == '__main__':
             url = 'http://' + url
 
         for i, a in enumerate(args):
-            n = i + 1
             # print(i, a)
 
-            if a in ['--data', '-d'] and len(sys.argv) > n:
-                data = sys.argv[n]
+            if a in ['--data', '-d'] and len(args) >= i + 1:
+                data = args[i + 1].encode('utf-8')
 
-            if a in ['--headers', '-h'] and len(sys.argv) > n:
-                data = sys.argv[n]
+            if a in ['--headers', '-h'] and len(args) >= i + 1:
+                headers = args[i + 1]
 
         s = Session()
         r = Request(method, url, data=data, headers=headers).prepare()
         resp = s.send(r)
 
-        print(' ')
         print(method.upper(), color_text(resp.url, 'cyan'))
 
         code = resp.status_code
@@ -70,10 +68,7 @@ if __name__ == '__main__':
             code_color = 'red'
 
         print(color_text(f'{code} {STATUSES.get(code)}', code_color))
-
-        print(' ')
         print('\r\n'.join([f'{k}: {v}' for k, v in resp.headers.items()]))
-        # print(json.dumps(resp.json(), sort_keys=False, indent=4))
         if resp.content:
-            print(resp.json())
+            print('\r\n', resp.json(), sep='')
         print('\r\n')

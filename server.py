@@ -82,7 +82,6 @@ def get_response(status=204, body=None, extra=None):
             body = body.encode()
 
         response += body
-
     return response
 
 

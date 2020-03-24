@@ -5,6 +5,7 @@ from socket import *
 from src.db import Database
 from src.settings import CRLF, PROTOCOL, CONTENT_TYPE, STATUSES, PACKET_SIZE, ALLOWED_METHODS, METHODS
 from src.console import print_line
+# from src.tasks import Storage
 
 
 def get_response(status=204, body=None, extra=None):
@@ -37,6 +38,8 @@ def get_response(status=204, body=None, extra=None):
 
 def run(host, port, db_path):
 
+    # queue = Storage()
+
     server = socket(AF_INET, SOCK_STREAM)
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
@@ -61,6 +64,11 @@ def run(host, port, db_path):
 
             td = datetime.now().strftime('%H:%M:%S')
             rd = client.recv(PACKET_SIZE).decode()
+
+            # while True:
+            #     rd = client.recv(PACKET_SIZE)
+            #     if not rd:
+            #         break
 
             # Check received data
             if not rd:
@@ -104,6 +112,7 @@ def run(host, port, db_path):
                 body = database.select(alias, pk)
 
                 if method == 'POST':
+                    # queue.push()
                     print('Method POST')
                 elif method == 'PUT':
                     print('Method PUT')

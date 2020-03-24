@@ -1,4 +1,5 @@
 from src.settings import CRLF
+import sys
 
 #   Main Styles
 #       3x - Text Color
@@ -29,3 +30,17 @@ def print_line(*args, sep=''):
 
 def color_text(text, color, bold='1'):
     return f"\033[{bold};{color}m{text}\033[0m"
+
+
+def console_arg(option, default=None):
+    if isinstance(option, str):
+        option = [option]
+
+    argument = default
+    args = sys.argv[1:]
+    for i, a in enumerate(args):
+        if a in option and len(args) > i + 1:
+            argument = args[i + 1]
+
+    return argument
+

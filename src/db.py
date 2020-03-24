@@ -72,7 +72,7 @@ class Database:
         # self._get_name()
         file_name = self._file
         with open(file_name, 'w', encoding='utf-8') as f:
-            json.dump(self._db, f, sort_keys=False, indent=2, ensure_ascii=False)
+            json.dump(self._db, f, sort_keys=False, indent=2)
 
     #
     # todo: Database methods

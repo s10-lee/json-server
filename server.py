@@ -3,9 +3,11 @@ import json
 from datetime import datetime
 from socket import *
 from src.db import Database
-from src.settings import CRLF, PROTOCOL, CONTENT_TYPE, STATUSES, PACKET_SIZE, ALLOWED_METHODS, METHODS
+from src.settings import (
+    CRLF, PROTOCOL, CONTENT_TYPE, STATUSES, PACKET_SIZE, ALLOWED_METHODS, METHODS,
+    SERVER_HOST, SERVER_PORT, DB_PATH
+)
 from src.console import print_line
-# from src.tasks import Storage
 
 
 def get_response(status=204, body=None, extra=None):
@@ -38,8 +40,6 @@ def get_response(status=204, body=None, extra=None):
 
 def run(host, port, db_path):
 
-    # queue = Storage()
-
     server = socket(AF_INET, SOCK_STREAM)
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
@@ -52,7 +52,7 @@ def run(host, port, db_path):
         server.listen(5)
 
         # Greetings
-        print_line(f'<nl><green>Welcome to JSON Server !</green><nl><nl><cyan>http://{host}:{port}/</cyan><nl>')
+        print_line(f'<nl><green>JSON Server</green><nl><cyan>http://{host}:{port}/</cyan><nl>')
 
         while True:
             headers = {}
@@ -81,7 +81,7 @@ def run(host, port, db_path):
             body = None
             status_code = 200
 
-            # Favicon
+            # Favicon - just fun
             if url == '/favicon.ico':
                 with open('favicon.ico', 'rb') as fp:
                     output = get_response(status_code, fp.readlines()[0],
@@ -89,7 +89,7 @@ def run(host, port, db_path):
                     client.sendall(output)
                     client.close()
 
-                print_line('<green>/favicon.ico</green>')
+                # print_line('<green>/favicon.ico</green>')
                 continue
 
             print_line(f'<nl><cyan>************ {td} **************</cyan><nl>{rd}')
@@ -111,11 +111,8 @@ def run(host, port, db_path):
                 # Search by route_name and primary_key
                 body = database.select(alias, pk)
 
-                if method == 'POST':
-                    # queue.push()
-                    print('Method POST')
-                elif method == 'PUT':
-                    print('Method PUT')
+                if method in ('POST', 'PUT') :
+                    print_line(f'<nl><yellow>{method} not implemented</yellow>')
 
                 if not body:
                     status_code = 404
@@ -134,21 +131,21 @@ def run(host, port, db_path):
 
 
 if __name__ == '__main__':
-    server_host = 'localhost'
-    server_port = 8888
-    server_db_path = 'db.json'
+    host = SERVER_HOST
+    port = SERVER_PORT
+    db_path = DB_PATH
 
     if len(sys.argv) > 1:
         for index, argument in enumerate(sys.argv):
 
             # Find port number in arguments
             if argument in ['--port', '-p'] and len(sys.argv) > index + 1:
-                server_port = sys.argv[index + 1]
+                port = sys.argv[index + 1]
 
             if argument in ['--host', '-h'] and len(sys.argv) > index + 1:
-                server_host = sys.argv[index + 1]
+                host = sys.argv[index + 1]
 
             if argument in ['--data', '-d'] and len(sys.argv) > index + 1:
-                server_db_path = sys.argv[index + 1]
+                db_path = sys.argv[index + 1]
 
-    run(host=server_host, port=server_port, db_path=server_db_path)
+    run(host=host, port=port, db_path=db_path)

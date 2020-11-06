@@ -4,9 +4,14 @@ CRLF = '\r\n'
 # Packet size
 PACKET_SIZE = 4096
 
+# Server defaults
+SERVER_HOST = 'localhost'
+SERVER_PORT = 8888
+DB_PATH = 'db.json'
+
 # HTTP settings
 PROTOCOL = 'HTTP/1.1'
-CONTENT_TYPE = 'application/json; charset=UTF-8'
+CONTENT_TYPE = 'application/json'
 HEADERS = ['Server', 'Date', 'Allow', 'Content-type', 'Connection']
 ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS', 'POST']
 METHODS = ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS']

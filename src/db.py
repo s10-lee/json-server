@@ -1,6 +1,6 @@
 import json
 import os
-from src.settings import CRLF
+from src.console import print_line
 
 
 class DatabaseRecord:
@@ -31,9 +31,9 @@ class Database:
             with open(db_path, 'r', encoding='utf-8') as f:
                 self._file = db_path
                 self._db = json.load(f)
-        except FileNotFoundError as err:
-            print(err)
-            return
+        except FileNotFoundError:
+            print_line(f'<red>Database file not found:</red> {db_path}')
+            exit(0)
 
     # Generate name for debug
     def _get_name(self):

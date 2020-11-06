@@ -54,7 +54,6 @@ if __name__ == '__main__':
             url = 'http://' + url
 
         for i, a in enumerate(args):
-            # print(i, a)
 
             if a in ['--data', '-d'] and len(args) >= i + 1:
                 data = args[i + 1].encode('utf-8')
@@ -66,8 +65,6 @@ if __name__ == '__main__':
         r = Request(method, url, data=data, headers=headers).prepare()
         resp = s.send(r)
 
-        print_line(f'{method.upper()} <cyan>{resp.url}</cyan>')
-
         code = resp.status_code
         color = 'green'
         if code >= 400:
@@ -77,6 +74,10 @@ if __name__ == '__main__':
 
         print_line(f'<{color}>{code} {STATUSES.get(code)}</{color}>')
         print(CRLF.join([f'{k}: {v}' for k, v in resp.headers.items()]))
+
         if resp.content:
-            print(CRLF, resp.json(), sep='')
+            if resp.json():
+                print(CRLF, resp.json(), sep='')
+            else:
+                print(CRLF, resp.content, sep='')
         print_line('<nl>')

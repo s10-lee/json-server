@@ -15,6 +15,7 @@
 #   OPTIONS:
 #       --data, -d      JSON Data                       None
 #       --headers, -h   Additional HTTP headers         {'Content-type': 'application/json; charset=UTF-8'}
+#       --verbose, -v   Show response headers           None
 #
 #   USAGE:
 #
@@ -38,6 +39,7 @@ from src.console import print_line
 
 if __name__ == '__main__':
     method = 'GET'
+    verbose = False
     url = None
     data = None
     headers = {'Content-type': CONTENT_TYPE}
@@ -61,6 +63,9 @@ if __name__ == '__main__':
             if a in ['--headers', '-h'] and len(args) >= i + 1:
                 headers = json.loads(args[i + 1])
 
+            if a in ['-v']:
+                verbose = True
+
         s = Session()
         r = Request(method, url, data=data, headers=headers).prepare()
         resp = s.send(r)
@@ -72,8 +77,9 @@ if __name__ == '__main__':
         if code >= 500:
             color = 'red'
 
-        print_line(f'<{color}>{code} {STATUSES.get(code)}</{color}>')
-        print(CRLF.join([f'{k}: {v}' for k, v in resp.headers.items()]))
+        if verbose:
+            print_line(f'<{color}>{code} {STATUSES.get(code)}</{color}>')
+            print(CRLF.join([f'{k}: {v}' for k, v in resp.headers.items()]))
 
         if resp.content:
             if resp.json():

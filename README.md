@@ -1,6 +1,12 @@
 # JSON Server
 
-- Rename *db.sample.json* to ***db.json*** 
+- Rename *db.sample.json* to ***db.json***
+
+  First dimensions keys in json file would be your endpoints (URLs).
+  
+  
+  
+  
 - Run from terminal:
 ```
 python3 server.py [options]
